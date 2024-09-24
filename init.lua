@@ -358,7 +358,23 @@ require('lazy').setup({
       }
 
       require('mason').setup()
+      require('lspconfig').ts_ls.setup {}
 
+      -- Example nvim-cmp setup
+      local cmp = require 'cmp'
+
+      cmp.setup {
+        snippet = {
+          expand = function(args)
+            vim.fn['vsnip#anonymous'](args.body) -- For `vsnip` users.
+          end,
+        },
+        sources = cmp.config.sources({
+          { name = 'nvim_lsp' },
+        }, {
+          { name = 'buffer' },
+        }),
+      }
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
