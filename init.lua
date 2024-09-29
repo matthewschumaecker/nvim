@@ -16,14 +16,21 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-
+  {
+    'github/copilot.vim',
+    config = function()
+      -- Optional: You can set some configurations for Copilot here
+      vim.g.copilot_no_tab_map = true -- Disable default Tab mapping
+      vim.api.nvim_set_keymap('i', '<Tab>', 'copilot#Accept("<CR>")', { expr = true, silent = true })
+      -- You can customize key mappings as needed
+    end,
+  },
   {
     'tpope/vim-dadbod',
     'kristijanhusak/vim-dadbod-completion',
     'kristijanhusak/vim-dadbod-ui',
   },
   { 'akinsho/toggleterm.nvim' },
-  { 'echasnovski/mini.nvim', version = false },
   {
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
