@@ -1,9 +1,8 @@
--- =========================================
 -- Basic Neovim Setup: Keymaps and Settings
 -- =========================================
 require 'keymap'
 require 'settings'
-
+vim.g.mapleader = '\\'
 -- ===================================================
 -- Lazy.nvim Bootstrapping (Plugin Manager Setup)
 -- ===================================================
@@ -30,14 +29,36 @@ require('lazy').setup({
     'github/copilot.vim',
     config = function()
       vim.g.copilot_no_tab_map = true
-      vim.api.nvim_set_keymap('i', '<C-;>', 'copilot#Accept()', { expr = true, silent = true })
+      vim.api.nvim_set_keymap('i', '<C-Enter>', 'copilot#Accept()', { expr = true, silent = true })
       vim.api.nvim_set_keymap('i', '<C-K>', 'copilot#Next()', { expr = true, silent = true })
       vim.api.nvim_set_keymap('i', '<C-H>', 'copilot#Previous()', { expr = true, silent = true })
     end,
   },
-
-  -- Toggle integrated terminal
-  { 'akinsho/toggleterm.nvim' },
+  -- ========Adds Toggleterm which allows terminal integration========
+  {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    config = function()
+      require('toggleterm').setup {
+        open_mapping = [[<c-\>]],
+        direction = 'horizontal',
+      }
+    end,
+  },
+  -- Telescope for fuzzy finding files and text
+  {
+    'nvim-telescope/telescope.nvim',
+    tag = '0.1.8',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-treesitter/nvim-treesitter',
+    },
+    config = function()
+      local builtin = require 'telescope.builtin'
+      vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = '[F]ind [F]iles' })
+      vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = '[F]ind [G]rep' })
+    end,
+  },
 
   -- Auto-pair brackets and quotes
   {
@@ -60,13 +81,12 @@ require('lazy').setup({
     },
   },
 
-  -- Prettier integration for supported file types
+  -- Prettier integration for supported file types {
   {
     'MunifTanjim/prettier.nvim',
     dependencies = { 'jose-elias-alvarez/null-ls.nvim' },
     config = function()
-      local prettier = require 'prettier'
-      prettier.setup {
+      require('prettier').setup {
         bin = 'prettier',
         filetypes = {
           'css',
@@ -79,13 +99,14 @@ require('lazy').setup({
           'typescript',
           'yaml',
           'vue',
+          'go',
         },
       }
-      vim.api.nvim_set_keymap('n', '<Leader>p', ':Prettier<CR>', { noremap = true, silent = true })
+
+      vim.keymap.set('n', '<Leader>p', ':Prettier<CR>', { noremap = true, silent = true })
     end,
   },
 
-  -- Language Server Protocol setup
   {
     'neovim/nvim-lspconfig',
     dependencies = {
@@ -96,7 +117,9 @@ require('lazy').setup({
       'hrsh7th/cmp-nvim-lsp',
     },
     config = function()
-      local capabilities = vim.tbl_deep_extend('force', vim.lsp.protocol.make_client_capabilities(), require('cmp_nvim_lsp').default_capabilities())
+      local lspconfig = require 'lspconfig'
+      local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
       local servers = {
         lua_ls = {
           settings = {
@@ -105,22 +128,26 @@ require('lazy').setup({
             },
           },
         },
+        gopls = {},
       }
+
       require('mason').setup()
-      require('mason-tool-installer').setup { ensure_installed = vim.tbl_keys(servers) }
+      require('mason-tool-installer').setup {
+        ensure_installed = vim.tbl_keys(servers),
+      }
+
       require('mason-lspconfig').setup {
         handlers = {
-          function(server_name)
-            require('lspconfig')[server_name].setup {
+          function(server)
+            lspconfig[server].setup {
               capabilities = capabilities,
-              settings = servers[server_name] and servers[server_name].settings or nil,
+              settings = servers[server],
             }
           end,
         },
       }
     end,
   },
-
   -- Auto formatting
   {
     'stevearc/conform.nvim',
@@ -207,14 +234,23 @@ require('lazy').setup({
       }
     end,
   },
+  --nvimTree
+
+  {
+    'nvim-tree/nvim-tree.lua',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('nvim-tree').setup()
+      vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
+    end,
+  },
 
   -- Color scheme
   {
-    'folke/tokyonight.nvim',
+    'rebelot/kanagawa.nvim',
     priority = 1000,
     init = function()
-      vim.cmd.colorscheme 'tokyonight-night'
-      vim.cmd.hi 'Comment gui=none'
+      vim.cmd.colorscheme 'kanagawa'
     end,
   },
 
@@ -225,9 +261,6 @@ require('lazy').setup({
   {
     'echasnovski/mini.nvim',
     config = function()
-      require('mini.ai').setup { n_lines = 500 }
-      require('toggleterm').setup {}
-      require('mini.files').setup()
       require('mini.surround').setup()
       local statusline = require 'mini.statusline'
       statusline.setup { use_icons = vim.g.have_nerd_font }
@@ -272,23 +305,6 @@ require('lazy').setup({
   },
 })
 
--- =================================
--- LuaSnip Custom Loader
--- =================================
-local luasnip = require 'luasnip'
-require('luasnip.loaders.from_lua').load { paths = '~/.config/nvim/lua/snippets/' }
-
--- ==============================================
--- Auto Save on Insert Leave
--- ==============================================
-vim.api.nvim_create_autocmd('InsertLeave', {
-  callback = function()
-    if vim.bo.modified then
-      vim.cmd 'write'
-    end
-  end,
-})
-
 -- ==============================================
 -- HTML FileType Settings
 -- ==============================================
@@ -302,6 +318,12 @@ vim.api.nvim_create_autocmd('FileType', {
     vim.bo.smartindent = false
     vim.bo.autoindent = false
     vim.bo.cindent = false
+  end,
+})
+
+vim.api.nvim_create_autocmd('CursorHold', {
+  callback = function()
+    vim.diagnostic.open_float(nil, { focus = false })
   end,
 })
 

@@ -107,7 +107,6 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 vim.keymap.set('n', '<C-]>', '<cmd>move +1<CR>')
 vim.keymap.set('n', '<C-[>', '<cmd>move -2<CR>')
 vim.keymap.set('i', 'jk', '<Esc>')
-vim.keymap.set('n', 'fp', '<cmd>lua MiniFiles.open()<CR>')
 vim.keymap.set('n', 'TT', '<cmd>ToggleTerm<CR>')
 vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true })
 
@@ -118,15 +117,16 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "html",
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'html',
   callback = function()
-    vim.bo.expandtab = true    -- Use spaces instead of tabs
-    vim.bo.tabstop = 2         -- 2 spaces for each Tab
-    vim.bo.shiftwidth = 2      -- Indent by 2 spaces
-    vim.bo.softtabstop = 2     -- Insert 2 spaces for Tab key
-    vim.bo.smartindent = false    -- Disable smart indent
-    vim.bo.autoindent = false     -- Disable auto indent
-    vim.bo.cindent = false        -- Disable C-like indentation
+    vim.bo.expandtab = true -- Use spaces instead of tabs
+    vim.bo.tabstop = 2 -- 2 spaces for each Tab
+    vim.bo.shiftwidth = 2 -- Indent by 2 spaces
+    vim.bo.softtabstop = 2 -- Insert 2 spaces for Tab key
+    vim.bo.smartindent = false -- Disable smart indent
+    vim.bo.autoindent = false -- Disable auto indent
+    vim.bo.cindent = false -- Disable C-like indentation
   end,
 })
+
